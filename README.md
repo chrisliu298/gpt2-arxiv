@@ -1,10 +1,11 @@
 # CSE142 Project: Conditional Text Generation with Fine-Tuned GPT-2
 
-Our initial thoughts for this project is to re-implement GPT-2 from scratch, so it is challenging than all other project. To complete this project successfully, an estimated list of works includes but not limits to:
+Our initial thoughts for this project is to re-implement GPT-2 from scratch, so it is challenging than all other projects. To complete this project successfully, an estimated list of works includes but not limits to:
 
 1. Fully understand the GPT-2 paper
 
 2. Fully understand the GPT-2 source code
+
 
 ## Project Topics
 
