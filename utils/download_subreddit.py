@@ -3,8 +3,15 @@ import requests
 import json
 
 
-class DataPipeline:
-    def __init__(self, subreddit, option="submission", start=0, least_num_comments=3, path="../data/"):
+class DownloadSubreddit:
+    def __init__(
+        self,
+        subreddit,
+        option="submission",
+        start=0,
+        least_num_comments=3,
+        path="data/",
+    ):
         self.subreddit = subreddit
         self.option = option
         self.start = start
