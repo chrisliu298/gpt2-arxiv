@@ -1,4 +1,4 @@
-from utils.scraper import Scraper
+from utils.download_reddit_data import DataPipeline
 
-reddit_scraper = Scraper("nosleep", "submission")
-reddit_scraper.extract()
+reddit_downloader = DataPipeline("nosleep", "submission", start=1577836800)
+reddit_downloader.download()

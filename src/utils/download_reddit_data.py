@@ -4,11 +4,12 @@ import re
 import time
 
 
-class Scraper:
-    def __init__(self, subreddit, option="submission"):
+class DataPipeline:
+    def __init__(self, subreddit, option="submission", start=0):
         self.subreddit = subreddit
         self.option = option
-        self.data = None
+        self.start = start
+        self.data = []
         self.url = "http://api.pushshift.io/reddit"
 
     def fetch(self, **kwargs):
@@ -24,8 +25,8 @@ class Scraper:
             sorted_data_by_id = sorted(data, key=lambda x: int(x["id"], 36))
             return sorted_data_by_id
 
-    def extract(self, **kwargs):
-        max_created_utc = 1577836800
+    def download(self, **kwargs):
+        max_created_utc = self.start
         max_id = 0
         filename = self.subreddit
         file = open(f"{filename}.txt", "w+")
@@ -41,15 +42,17 @@ class Scraper:
                     if created_utc > max_created_utc:
                         max_created_utc = created_utc
                     try:
-                        text = object["selftext"].replace("\n", "")
-                        if text == "[removed]" or text == "":
+                        text = object["selftext"]
+                        if text == "[removed]" or text == "[deleted]" or text == "":
                             continue
                         else:
-                            file.write("<|startoftext|> ")
-                            file.write(text + " <|endoftext|>\n")
+                            file.write("<|startoftext|> " + text + " <|endoftext|>\n")
+                            # self.data.append(text + " <|endoftext|>")
                     except:
                         continue
             if nothing_processed:
                 return
             max_created_utc -= 1
         file.close()
+
+    
