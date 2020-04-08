@@ -4,11 +4,12 @@ import json
 
 
 class DataPipeline:
-    def __init__(self, subreddit, option="submission", start=0, least_num_comments=3):
+    def __init__(self, subreddit, option="submission", start=0, least_num_comments=3, path="../data/"):
         self.subreddit = subreddit
         self.option = option
         self.start = start
         self.data = []
+        self.path = path
         self.least_num_comments = least_num_comments
         self.url = "http://api.pushshift.io/reddit"
 
@@ -30,7 +31,7 @@ class DataPipeline:
     def download(self, **kwargs):
         max_created_utc = self.start
         max_id = 0
-        filename = self.subreddit
+        filename = self.path + self.subreddit
         file = open(f"{filename}.txt", "w+")
         count = 0
         start_date = datetime.fromtimestamp(self.start).strftime("%Y-%m-%d %H:%M:%S")
