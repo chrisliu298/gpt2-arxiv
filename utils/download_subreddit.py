@@ -1,3 +1,4 @@
+from sklearn.model_selection import train_test_split
 from datetime import datetime
 import requests
 import json
@@ -11,12 +12,14 @@ class DownloadSubreddit:
         start=0,
         least_num_comments=3,
         path="data/",
+        use="train"
     ):
         self.subreddit = subreddit
         self.option = option
         self.start = start
         self.data = []
         self.path = path
+        self.use = use
         self.least_num_comments = least_num_comments
         self.url = "http://api.pushshift.io/reddit"
 
@@ -38,7 +41,7 @@ class DownloadSubreddit:
     def download(self, **kwargs):
         max_created_utc = self.start
         max_id = 0
-        filename = self.path + self.subreddit
+        filename = self.path + self.subreddit + "_" + self.use
         file = open(f"{filename}.txt", "w+")
         count = 0
         start_date = datetime.fromtimestamp(self.start).strftime("%Y-%m-%d %H:%M:%S")
@@ -77,3 +80,22 @@ class DownloadSubreddit:
                 )
                 return
             max_created_utc -= 1
+
+    def split(self):
+        story_list = []
+        with open(self.path + self.subreddit + "_" + self.use + ".txt", "r") as s:
+            story_reader = s.read().split("<|startoftext|> ")
+            for story in story_reader:
+                story_list.append(story)
+        num_train = int(0.8 * len(story_list))
+        train = story_list[:num_train]
+        evaluate = story_list[num_train:]
+        with open(f"data/{self.subreddit}_train.txt", "w+") as train_file:
+            for story in train:
+                train_file.write(story)
+            train_file.close()
+        with open(f"data/{self.subreddit}_evaluate.txt", "w+") as evaluate_file:
+            for story in evaluate:
+                evaluate_file.write(story)
+            evaluate_file.close()
+

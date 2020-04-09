@@ -1,12 +1,13 @@
 from utils.download_subreddit import DownloadSubreddit
 
-
 if __name__ == "__main__":
     reddit_downloader = DownloadSubreddit(
-        subreddit="nosleep",
+        subreddit="shortscarystories",
         option="submission",
-        start=1554768000,
+        start=1491696000,
         least_num_comments=3,
         path="data/",
+        use=""
     )
     reddit_downloader.download()
+    reddit_downloader.split()
