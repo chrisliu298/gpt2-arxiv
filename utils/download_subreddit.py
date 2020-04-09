@@ -11,7 +11,7 @@ class DownloadSubreddit:
         option="submission",
         start=0,
         least_num_comments=3,
-        path="data/",
+        path="dataset/",
         use="train"
     ):
         self.subreddit = subreddit
@@ -87,15 +87,29 @@ class DownloadSubreddit:
             story_reader = s.read().split("<|startoftext|> ")
             for story in story_reader:
                 story_list.append(story)
+        story_list = story_list[1:]
         num_train = int(0.8 * len(story_list))
         train = story_list[:num_train]
         evaluate = story_list[num_train:]
-        with open(f"data/{self.subreddit}_train.txt", "w+") as train_file:
+        num_valid = int(0.5 * len(evaluate))
+        valid = evaluate[:num_valid]
+        test = evaluate[num_valid:]
+        print(f"Total: {len(story_list)}")
+        print(f"Train: {len(train)}")
+        print(f"Valid: {len(valid)}")
+        print(f"Test: {len(test)}")
+        with open(f"{self.path}{self.subreddit}_train.txt", "w+") as train_file:
             for story in train:
                 train_file.write(story)
             train_file.close()
-        with open(f"data/{self.subreddit}_evaluate.txt", "w+") as evaluate_file:
-            for story in evaluate:
-                evaluate_file.write(story)
-            evaluate_file.close()
+        with open(f"{self.path}{self.subreddit}_valid.txt", "w+") as valid_file:
+            for story in valid:
+                valid_file.write(story)
+            valid_file.close()
+        with open(f"{self.path}{self.subreddit}_test.txt", "w+") as test_file:
+            for story in test:
+                test_file.write(story)
+            test_file.close()
+
+        
 

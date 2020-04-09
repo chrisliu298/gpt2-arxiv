@@ -6,7 +6,7 @@ if __name__ == "__main__":
         option="submission",
         start=1491696000,
         least_num_comments=3,
-        path="data/",
+        path="dataset/",
         use=""
     )
     reddit_downloader.download()
