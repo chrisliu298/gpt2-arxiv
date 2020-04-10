@@ -15,7 +15,7 @@
 \usepackage{float}
 \usepackage{multicol}
 \usepackage{biblatex}
-\hypersetup{colorlinks=true, urlcolor=red}
+\hypersetup{colorlinks=true, urlcolor=blue}
 \setlength{\tabcolsep}{5pt}
 \graphicspath{{./images/}}
 \renewcommand{\baselinestretch}{1.1}
@@ -23,7 +23,7 @@
 \DeclareMathOperator*{\argmax}{arg\,max}
 \addbibresource{references.bib}
 
-\title{Conditional Text Generation with Fine-tuned GPT-2}
+\title{Conditional Synthetic Text Generation with Fine-tuned GPT-2}
 \author{
  Chris Liu \\
     \texttt{yliu298@ucsc.edu} \\
@@ -31,17 +31,19 @@
  Yiyun Zheng \\
     \texttt{yzheng63@ucsc.edu}
 }
-\date{}
  
+
 \begin{document}
 \maketitle
 \section{Project Idea}
 
-Language modeling is the task of predicting the next word or character given all previous words. GPT-2, the successor of GPT \cite{}trained by OpenAI \cite{radford2019language} using 40GB Internet text data, is the state-of-the-art language model to perform such task. It is a transformer-based model with four variations of model size (number of parameters): \texttt{124M}, \texttt{355M}, \texttt{774M}, and \texttt{1558M}
-
-Our mission in this project is to 
+Language modeling is the task of predicting the next word or character, given all previous words. GPT-2, the successor of GPT \cite{radford2018improving} trained by OpenAI \cite{radford2019language} using 40GB Internet raw text data, is the state-of-the-art language model to perform such task. However, its generation performance can largely depend on its familiarity with a certain topic. Our task in this project is to fine-tune the GPT-2 model on our datasets, which consist of submissions of different topics scraped from multiple subreddit topics, to perform conditional synthetic text samples generation. Our goal is to explore GPT-2's improvement after fine-tuning it on a domain-specific topic.
 
 \section{Dataset Description}
+
+At this point, we implemented a scraper to scrape the submissions under a particular subreddit posted after a specific time. To ensure the text quality, we only kept submissions with at least three comments. This action is similar to what OpenAI did by filtering outbound links from Reddit with more than three karma. The dataset of a subreddit is a \texttt{.txt} file, and each submission in the file start with a start token \texttt{<|startoftext|>} and ends with an end token \texttt{<|endoftext|>}. After all the data are collected, it pre-processes and splits it into training, validation, and testing set. Note that in the split sets, the start token \texttt{<|startoftext|>} will be omitted because the model does not need to learn how to start a sentence, but the end token \texttt{<|endoftext|>} will be kept to separate the submissions and to get the model of sense of how to stop a story.
+
+Using pre-trained model saves us the time to choose the model, so we will spend extra effort on datasets. If we are not restricted by the time and the computing power, we will try other ideas to make this project more interesting. One example can be generating digital versions of people fine-tuning the GPT-2 on their tweets.
 
 \section{Input-Output Behavior}
 
