@@ -1995,8 +1995,10 @@
     <bcf:datasource type="file" datatype="bibtex">references.bib</bcf:datasource>
   </bcf:bibdata>
   <bcf:section number="0">
-    <bcf:citekey order="1">radford2018improving</bcf:citekey>
-    <bcf:citekey order="2">radford2019language</bcf:citekey>
+    <bcf:citekey order="1">radford2019language</bcf:citekey>
+    <bcf:citekey order="2">radford2018improving</bcf:citekey>
+    <bcf:citekey order="3">radford2019language</bcf:citekey>
+    <bcf:citekey order="4">smith_probabilistic_nodate</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="nty">
