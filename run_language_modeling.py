@@ -1,3 +1,25 @@
+# coding=utf-8
+# Copyright 2018 The Google AI Language Team Authors and The HuggingFace Inc. team.
+# Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+Fine-tuning the library models for language modeling on a text file (GPT, GPT-2, BERT, RoBERTa).
+GPT and GPT-2 are fine-tuned using a causal language modeling (CLM) loss while BERT and RoBERTa are fine-tuned
+using a masked language modeling (MLM) loss.
+"""
+
+
 import argparse
 import glob
 import logging
@@ -42,7 +64,9 @@ MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
 
 
 class TextDataset(Dataset):
-    def __init__(self, tokenizer: AutoTokenizer, args, file_path: str, block_size=512):
+    def __init__(
+        self, tokenizer: PreTrainedTokenizer, args, file_path: str, block_size=512
+    ):
         assert os.path.isfile(file_path)
 
         block_size = block_size - (
@@ -91,9 +115,44 @@ class TextDataset(Dataset):
         return torch.tensor(self.examples[item], dtype=torch.long)
 
 
+class LineByLineTextDataset(Dataset):
+    def __init__(
+        self, tokenizer: PreTrainedTokenizer, args, file_path: str, block_size=512
+    ):
+        assert os.path.isfile(file_path)
+        # Here, we do not cache the features, operating under the assumption
+        # that we will soon use fast multithreaded tokenizers from the
+        # `tokenizers` repo everywhere =)
+        logger.info("Creating features from dataset file at %s", file_path)
+
+        with open(file_path, encoding="utf-8") as f:
+            lines = [
+                line
+                for line in f.read().splitlines()
+                if (len(line) > 0 and not line.isspace())
+            ]
+
+        self.examples = tokenizer.batch_encode_plus(
+            lines, add_special_tokens=True, max_length=block_size
+        )["input_ids"]
+
+    def __len__(self):
+        return len(self.examples)
+
+    def __getitem__(self, i):
+        return torch.tensor(self.examples[i], dtype=torch.long)
+
+
 def load_and_cache_examples(args, tokenizer, evaluate=False):
     file_path = args.eval_data_file if evaluate else args.train_data_file
-    return TextDataset(tokenizer, args, file_path=file_path, block_size=args.block_size)
+    if args.line_by_line:
+        return LineByLineTextDataset(
+            tokenizer, args, file_path=file_path, block_size=args.block_size
+        )
+    else:
+        return TextDataset(
+            tokenizer, args, file_path=file_path, block_size=args.block_size
+        )
 
 
 def set_seed(args):
@@ -150,6 +209,51 @@ def _rotate_checkpoints(args, checkpoint_prefix="checkpoint", use_mtime=False) -
             )
         )
         shutil.rmtree(checkpoint)
+
+
+def mask_tokens(
+    inputs: torch.Tensor, tokenizer: PreTrainedTokenizer, args
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """ Prepare masked tokens inputs/labels for masked language modeling: 80% MASK, 10% random, 10% original. """
+
+    if tokenizer.mask_token is None:
+        raise ValueError(
+            "This tokenizer does not have a mask token which is necessary for masked language modeling. Remove the --mlm flag if you want to use this tokenizer."
+        )
+
+    labels = inputs.clone()
+    # We sample a few tokens in each sequence for masked-LM training (with probability args.mlm_probability defaults to 0.15 in Bert/RoBERTa)
+    probability_matrix = torch.full(labels.shape, args.mlm_probability)
+    special_tokens_mask = [
+        tokenizer.get_special_tokens_mask(val, already_has_special_tokens=True)
+        for val in labels.tolist()
+    ]
+    probability_matrix.masked_fill_(
+        torch.tensor(special_tokens_mask, dtype=torch.bool), value=0.0
+    )
+    if tokenizer._pad_token is not None:
+        padding_mask = labels.eq(tokenizer.pad_token_id)
+        probability_matrix.masked_fill_(padding_mask, value=0.0)
+    masked_indices = torch.bernoulli(probability_matrix).bool()
+    labels[~masked_indices] = -100  # We only compute loss on masked tokens
+
+    # 80% of the time, we replace masked input tokens with tokenizer.mask_token ([MASK])
+    indices_replaced = (
+        torch.bernoulli(torch.full(labels.shape, 0.8)).bool() & masked_indices
+    )
+    inputs[indices_replaced] = tokenizer.convert_tokens_to_ids(tokenizer.mask_token)
+
+    # 10% of the time, we replace masked input tokens with random word
+    indices_random = (
+        torch.bernoulli(torch.full(labels.shape, 0.5)).bool()
+        & masked_indices
+        & ~indices_replaced
+    )
+    random_words = torch.randint(len(tokenizer), labels.shape, dtype=torch.long)
+    inputs[indices_random] = random_words[indices_random]
+
+    # The rest of the time (10% of the time) we keep the masked input tokens unchanged
+    return inputs, labels
 
 
 def train(
@@ -329,11 +433,17 @@ def train(
                 steps_trained_in_current_epoch -= 1
                 continue
 
-            inputs, labels = (batch, batch)
+            inputs, labels = (
+                mask_tokens(batch, tokenizer, args) if args.mlm else (batch, batch)
+            )
             inputs = inputs.to(args.device)
             labels = labels.to(args.device)
             model.train()
-            outputs = model(inputs, labels=labels)
+            outputs = (
+                model(inputs, masked_lm_labels=labels)
+                if args.mlm
+                else model(inputs, labels=labels)
+            )
             loss = outputs[
                 0
             ]  # model outputs are always tuple in transformers (see doc)
@@ -432,7 +542,7 @@ def train(
 
 
 def evaluate(
-    args, model: PreTrainedModel, tokenizer: PreTrainedModel, prefix=""
+    args, model: PreTrainedModel, tokenizer: PreTrainedTokenizer, prefix=""
 ) -> Dict:
     # Loop to handle MNLI double evaluation (matched, mis-matched)
     eval_output_dir = args.output_dir
@@ -473,12 +583,18 @@ def evaluate(
     model.eval()
 
     for batch in tqdm(eval_dataloader, desc="Evaluating"):
-        inputs, labels = (batch, batch)
+        inputs, labels = (
+            mask_tokens(batch, tokenizer, args) if args.mlm else (batch, batch)
+        )
         inputs = inputs.to(args.device)
         labels = labels.to(args.device)
 
         with torch.no_grad():
-            outputs = model(inputs, labels=labels)
+            outputs = (
+                model(inputs, masked_lm_labels=labels)
+                if args.mlm
+                else model(inputs, labels=labels)
+            )
             lm_loss = outputs[0]
             eval_loss += lm_loss.mean().item()
         nb_eval_steps += 1
@@ -708,11 +824,27 @@ def main():
     )
     args = parser.parse_args()
 
+    if (
+        args.model_type in ["bert", "roberta", "distilbert", "camembert"]
+        and not args.mlm
+    ):
+        raise ValueError(
+            "BERT and RoBERTa-like models do not have LM heads but masked LM heads. They must be run using the --mlm "
+            "flag (masked language modeling)."
+        )
     if args.eval_data_file is None and args.do_eval:
         raise ValueError(
             "Cannot do evaluation without an evaluation data file. Either supply a file to --eval_data_file "
             "or remove the --do_eval argument."
         )
+    if args.should_continue:
+        sorted_checkpoints = _sorted_checkpoints(args)
+        if len(sorted_checkpoints) == 0:
+            raise ValueError(
+                "Used --should_continue but no checkpoint was found in --output_dir."
+            )
+        else:
+            args.model_name_or_path = sorted_checkpoints[-1]
 
     if (
         os.path.exists(args.output_dir)
@@ -726,6 +858,17 @@ def main():
                 args.output_dir
             )
         )
+
+    # Setup distant debugging if needed
+    if args.server_ip and args.server_port:
+        # Distant debugging - see https://code.visualstudio.com/docs/python/debugging#_attach-to-a-local-script
+        import ptvsd
+
+        print("Waiting for debugger attach")
+        ptvsd.enable_attach(
+            address=(args.server_ip, args.server_port), redirect_output=True
+        )
+        ptvsd.wait_for_attach()
 
     # Setup CUDA, GPU & distributed training
     if args.local_rank == -1 or args.no_cuda:
