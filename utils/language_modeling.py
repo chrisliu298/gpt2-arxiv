@@ -1,4 +1,8 @@
 from utils.data import TextDataset
+from utils.modeling_utils import load_and_cache_examples
+from utils.modeling_utils import set_seed
+from utils.modeling_utils import sorted_checkpoints
+from utils.modeling_utils import rotate_checkpoints
 
 import glob
 import logging
