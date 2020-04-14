@@ -3,7 +3,7 @@ import logging
 import os
 import random
 import re
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 import numpy as np
 import torch
 from torch.nn.utils.rnn import pad_sequence
