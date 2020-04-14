@@ -28,6 +28,27 @@ logger = logging.getLogger(__name__)
 MODEL_CONFIG_CLASSES = list(MODEL_WITH_LM_HEAD_MAPPING.keys())
 MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
 
+def _sorted_checkpoints(
+    args, checkpoint_prefix="checkpoint", use_mtime=False
+) -> List[str]:
+    ordering_and_checkpoint_path = []
+
+    glob_checkpoints = glob.glob(
+        os.path.join(args.output_dir, "{}-*".format(checkpoint_prefix))
+    )
+
+    for path in glob_checkpoints:
+        if use_mtime:
+            ordering_and_checkpoint_path.append((os.path.getmtime(path), path))
+        else:
+            regex_match = re.match(".*{}-([0-9]+)".format(checkpoint_prefix), path)
+            if regex_match and regex_match.groups():
+                ordering_and_checkpoint_path.append((int(regex_match.groups()[0]), path))
+
+    checkpoints_sorted = sorted(ordering_and_checkpoint_path)
+    checkpoints_sorted = [checkpoint[1] for checkpoint in checkpoints_sorted]
+    return checkpoints_sorted
+
 
 def _rotate_checkpoints(args, checkpoint_prefix="checkpoint", use_mtime=False) -> None:
     if not args.save_total_limit:
