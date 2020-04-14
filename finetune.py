@@ -1,5 +1,5 @@
-import train
-import evaluate
+from train import train
+from evaluate import evaluate
 from dataset import TextDataset, LineByLineTextDataset
 
 import argparse
