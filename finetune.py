@@ -1,9 +1,9 @@
 from utils.language_modeling import train
 from utils.language_modeling import evaluate
-from utils.language_modeling import load_and_cache_examples
-from utils.language_modeling import set_seed
-from utils.language_modeling import sorted_checkpoints
-from utils.language_modeling import rotate_checkpoints
+from utils.modeling_utils import load_and_cache_examples
+from utils.modeling_utils import set_seed
+from utils.modeling_utils import sorted_checkpoints
+from utils.modeling_utils import rotate_checkpoints
 
 import argparse
 import glob
