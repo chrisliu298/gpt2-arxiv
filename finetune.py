@@ -1,6 +1,10 @@
-from train import train
-from evaluate import evaluate
-from dataset import TextDataset, LineByLineTextDataset
+from utils.language_modeling import train
+from utils.language_modeling import evaluate
+from utils.language_modeling import load_and_cache_examples
+from utils.language_modeling import set_seed
+from utils.language_modeling import sorted_checkpoints
+from utils.language_modeling import rotate_checkpoints
+from utils.data import TextDataset, LineByLineTextDataset
 
 import argparse
 import glob
@@ -65,7 +69,7 @@ def set_seed(args):
         torch.cuda.manual_seed_all(args.seed)
 
 
-def _sorted_checkpoints(
+def sorted_checkpoints(
     args, checkpoint_prefix="checkpoint", use_mtime=False
 ) -> List[str]:
     ordering_and_checkpoint_path = []
@@ -87,14 +91,14 @@ def _sorted_checkpoints(
     return checkpoints_sorted
 
 
-def _rotate_checkpoints(args, checkpoint_prefix="checkpoint", use_mtime=False) -> None:
+def rotate_checkpoints(args, checkpoint_prefix="checkpoint", use_mtime=False) -> None:
     if not args.save_total_limit:
         return
     if args.save_total_limit <= 0:
         return
 
     # Check if we should delete older checkpoint(s)
-    checkpoints_sorted = _sorted_checkpoints(args, checkpoint_prefix, use_mtime)
+    checkpoints_sorted = sorted_checkpoints(args, checkpoint_prefix, use_mtime)
     if len(checkpoints_sorted) <= args.save_total_limit:
         return
 
@@ -329,7 +333,7 @@ def main():
             "or remove the --do_eval argument."
         )
     if args.should_continue:
-        sorted_checkpoints = _sorted_checkpoints(args)
+        sorted_checkpoints = sorted_checkpoints(args)
         if len(sorted_checkpoints) == 0:
             raise ValueError(
                 "Used --should_continue but no checkpoint was found in --output_dir."
