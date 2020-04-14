@@ -442,9 +442,8 @@ def main():
             model = AutoModelWithLMHead.from_pretrained(checkpoint)
             model.to(args.device)
             result = evaluate(args, model, tokenizer, prefix=prefix)
-            result = dict((k + "_{}".format(global_step), v) for k, v in result.items())
             results.append(result)
-
+            result = dict((k + "_{}".format(global_step), v) for k, v in result.items())
     print(results)
     return results
 
