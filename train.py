@@ -1,3 +1,4 @@
+from evaluate import evaluate
 import glob
 import logging
 import os
@@ -26,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 MODEL_CONFIG_CLASSES = list(MODEL_WITH_LM_HEAD_MAPPING.keys())
 MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
+
 
 def set_seed(args):
     random.seed(args.seed)
@@ -66,8 +68,7 @@ def train(
     if args.max_steps > 0:
         t_total = args.max_steps
         args.num_train_epochs = (
-            args.max_steps
-            // (len(train_dataloader) // args.gradient_accumulation_steps)
+            args.max_steps // (len(train_dataloader) // args.gradient_accumulation_steps)
             + 1
         )
     else:
@@ -95,9 +96,7 @@ def train(
         },
         {
             "params": [
-                p
-                for n, p in model.named_parameters()
-                if any(nd in n for nd in no_decay)
+                p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)
             ],
             "weight_decay": 0.0,
         },
@@ -130,9 +129,7 @@ def train(
             raise ImportError(
                 "Please install apex from https://www.github.com/nvidia/apex to use fp16 training."
             )
-        model, optimizer = amp.initialize(
-            model, optimizer, opt_level=args.fp16_opt_level
-        )
+        model, optimizer = amp.initialize(model, optimizer, opt_level=args.fp16_opt_level)
 
     # multi-gpu training (should be after apex fp16 initialization)
     if args.n_gpu > 1:
@@ -151,9 +148,7 @@ def train(
     logger.info("***** Running training *****")
     logger.info("  Num examples = %d", len(train_dataset))
     logger.info("  Num Epochs = %d", args.num_train_epochs)
-    logger.info(
-        "  Instantaneous batch size per GPU = %d", args.per_gpu_train_batch_size
-    )
+    logger.info("  Instantaneous batch size per GPU = %d", args.per_gpu_train_batch_size)
     logger.info(
         "  Total train batch size (w. parallel, distributed & accumulation) = %d",
         args.train_batch_size
@@ -227,9 +222,7 @@ def train(
                 if args.mlm
                 else model(inputs, labels=labels)
             )
-            loss = outputs[
-                0
-            ]  # model outputs are always tuple in transformers (see doc)
+            loss = outputs[0]  # model outputs are always tuple in transformers (see doc)
 
             if args.n_gpu > 1:
                 loss = loss.mean()  # mean() to average on multi-gpu parallel training
@@ -249,9 +242,7 @@ def train(
                         amp.master_params(optimizer), args.max_grad_norm
                     )
                 else:
-                    torch.nn.utils.clip_grad_norm_(
-                        model.parameters(), args.max_grad_norm
-                    )
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
                 optimizer.step()
                 scheduler.step()  # Update learning rate schedule
                 model.zero_grad()
@@ -307,9 +298,7 @@ def train(
                     torch.save(
                         scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt")
                     )
-                    logger.info(
-                        "Saving optimizer and scheduler states to %s", output_dir
-                    )
+                    logger.info("Saving optimizer and scheduler states to %s", output_dir)
 
             if args.max_steps > 0 and global_step > args.max_steps:
                 epoch_iterator.close()
