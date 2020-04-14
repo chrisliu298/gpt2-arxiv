@@ -15,6 +15,17 @@ from transformers import PreTrainedModel, PreTrainedTokenizer
 
 logger = logging.getLogger(__name__)
 
+def load_and_cache_examples(args, tokenizer, evaluate=False):
+    file_path = args.eval_data_file if evaluate else args.train_data_file
+    if args.line_by_line:
+        return LineByLineTextDataset(
+            tokenizer, args, file_path=file_path, block_size=args.block_size
+        )
+    else:
+        return TextDataset(
+            tokenizer, args, file_path=file_path, block_size=args.block_size
+        )
+
 
 def evaluate(
     args, model: PreTrainedModel, tokenizer: PreTrainedTokenizer, prefix=""
