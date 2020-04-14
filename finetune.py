@@ -45,6 +45,18 @@ MODEL_CONFIG_CLASSES = list(MODEL_WITH_LM_HEAD_MAPPING.keys())
 MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
 
 
+def load_and_cache_examples(args, tokenizer, evaluate=False):
+    file_path = args.eval_data_file if evaluate else args.train_data_file
+    if args.line_by_line:
+        return LineByLineTextDataset(
+            tokenizer, args, file_path=file_path, block_size=args.block_size
+        )
+    else:
+        return TextDataset(
+            tokenizer, args, file_path=file_path, block_size=args.block_size
+        )
+
+
 def set_seed(args):
     random.seed(args.seed)
     np.random.seed(args.seed)
