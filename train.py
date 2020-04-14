@@ -29,6 +29,30 @@ MODEL_CONFIG_CLASSES = list(MODEL_WITH_LM_HEAD_MAPPING.keys())
 MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
 
 
+def _rotate_checkpoints(args, checkpoint_prefix="checkpoint", use_mtime=False) -> None:
+    if not args.save_total_limit:
+        return
+    if args.save_total_limit <= 0:
+        return
+
+    # Check if we should delete older checkpoint(s)
+    checkpoints_sorted = _sorted_checkpoints(args, checkpoint_prefix, use_mtime)
+    if len(checkpoints_sorted) <= args.save_total_limit:
+        return
+
+    number_of_checkpoints_to_delete = max(
+        0, len(checkpoints_sorted) - args.save_total_limit
+    )
+    checkpoints_to_be_deleted = checkpoints_sorted[:number_of_checkpoints_to_delete]
+    for checkpoint in checkpoints_to_be_deleted:
+        logger.info(
+            "Deleting older checkpoint [{}] due to args.save_total_limit".format(
+                checkpoint
+            )
+        )
+        shutil.rmtree(checkpoint)
+
+
 def set_seed(args):
     random.seed(args.seed)
     np.random.seed(args.seed)
