@@ -1,3 +1,4 @@
+from dataset import TextDataset
 import logging
 import os
 import re
