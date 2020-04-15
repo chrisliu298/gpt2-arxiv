@@ -442,7 +442,7 @@ def main():
             model = AutoModelWithLMHead.from_pretrained(checkpoint)
             model.to(args.device)
             result = evaluate(args, model, tokenizer, prefix=prefix)
-            results.append(result.values())
+            results.append({checkpoint: dict(result.values())})
             result = dict((k + "_{}".format(global_step), v) for k, v in result.items())
     print("======== Perplexity scores ========")
     for r in results:
