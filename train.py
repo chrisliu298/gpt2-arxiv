@@ -45,19 +45,22 @@ def main():
     # Model classes
     MODEL_CONFIG_CLASSES = list(MODEL_WITH_LM_HEAD_MAPPING.keys())
     MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
-    # Model arguments
+
+    # These arguments could have been handled by CLI, but I put them in this
+    # way to make the code simpler.
+
     # Model arguments
     model_args = collections.defaultdict(
-        config_name=None,
+        config_name="gpt2",
         model_name_or_path="gpt2",
         model_type="gpt2",
-        tokenizer_name=None,
+        tokenizer_name="gpt2",
         cache_dir=None,
     )
     # Data arguments
     data_args = collections.defaultdict(
-        train_data_file="/data/train.txt",
-        eval_data_file="/data/eval.txt",
+        train_data_file="data/train.txt",
+        eval_data_file="data/eval.txt",
         line_by_line=False,
         mlm=False,
         mlm_probability=0.15,
@@ -79,13 +82,13 @@ def main():
         weight_decay=0.0,
         adam_epsilon=1e-08,
         max_grad_norm=1.0,
-        num_train_epochs=5.0,
+        num_train_epochs=7.0,
         max_steps=-1,
         warmup_steps=0,
         logging_dir=None,
         logging_first_step=False,
-        logging_steps=10000,
-        save_steps=10000,
+        logging_steps=2000,
+        save_steps=100000,
         save_total_limit=10,
         no_cuda=False,
         seed=42,
