@@ -169,7 +169,7 @@ def main():
         eval_dataset=eval_dataset,
         prediction_loss_only=True,
     )
-
+    # Define model path
     model_path = (
         model_args.model_name_or_path
         if model_args.model_name_or_path is not None
