@@ -1,6 +1,6 @@
 # CSE142 Project6: arXiv-GPT-2
 
-## Prerequisite
+## Prerequisites
 
 ```
 pip install git+https://github.com/huggingface/transformers.git
