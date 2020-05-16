@@ -1,32 +1,23 @@
-import torch
-import json
-import logging
-import math
 import os
+import math
 import random
-import dataclasses
-from dataclasses import dataclass, field
-from typing import Optional
-import collections
-from dict_to_obj import DictToObj
+import logging
 import warnings
+import collections
+import wandb
+from dict_to_obj import DictToObj
+from timeit import default_timer as timer
 
 warnings.filterwarnings("ignore")
-from timeit import default_timer as timer
-import wandb
-
 wandb.login()
 
-
 from transformers import (
-    CONFIG_MAPPING,
     MODEL_WITH_LM_HEAD_MAPPING,
     AutoConfig,
     AutoModelWithLMHead,
     AutoTokenizer,
     DataCollatorForLanguageModeling,
     LineByLineTextDataset,
-    PreTrainedTokenizer,
     TextDataset,
     Trainer,
     TrainingArguments,
@@ -155,9 +146,7 @@ def main():
     )
 
     data_collator = DataCollatorForLanguageModeling(
-        tokenizer=tokenizer,
-        mlm=data_args.mlm,
-        mlm_probability=data_args.mlm_probability,
+        tokenizer=tokenizer, mlm=data_args.mlm, mlm_probability=data_args.mlm_probability,
     )
 
     # Initialize trainer
@@ -186,7 +175,7 @@ def main():
         tokenizer.save_pretrained(training_args.output_dir)
 
     # Calculate training time
-    print(f"Training took {(end - start) / 3600} hours.")
+    logger.info(f"Training took {(end - start) / 3600} hours.")
 
     # Evaluate model
     results = {}
