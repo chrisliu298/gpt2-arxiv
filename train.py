@@ -149,7 +149,9 @@ def main():
     )
 
     data_collator = DataCollatorForLanguageModeling(
-        tokenizer=tokenizer, mlm=data_args.mlm, mlm_probability=data_args.mlm_probability,
+        tokenizer=tokenizer,
+        mlm=data_args.mlm,
+        mlm_probability=data_args.mlm_probability,
     )
 
     # Initialize trainer
