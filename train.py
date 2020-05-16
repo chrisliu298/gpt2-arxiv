@@ -10,11 +10,12 @@ from typing import Optional
 import collections
 from dict_to_obj import DictToObj
 import warnings
+
 warnings.filterwarnings("ignore")
 from timeit import default_timer as timer
 import wandb
-wandb.login()
 
+wandb.login()
 
 
 from transformers import (
@@ -29,17 +30,22 @@ from transformers import (
     TextDataset,
     Trainer,
     TrainingArguments,
-    set_seed
+    set_seed,
 )
 
 sep = "<|sep|>"
 
+
 def get_dataset(args, tokenizer, evaluate=False):
     file_path = args.eval_data_file if evaluate else args.train_data_file
     if args.line_by_line:
-        return LineByLineTextDataset(tokenizer=tokenizer, file_path=file_path, block_size=args.block_size)
+        return LineByLineTextDataset(
+            tokenizer=tokenizer, file_path=file_path, block_size=args.block_size
+        )
     else:
-        return TextDataset(tokenizer=tokenizer, file_path=file_path, block_size=args.block_size)
+        return TextDataset(
+            tokenizer=tokenizer, file_path=file_path, block_size=args.block_size
+        )
 
 
 def main():
@@ -65,7 +71,7 @@ def main():
         mlm=False,
         mlm_probability=0.15,
         block_size=512,
-        overwrite_cache=False
+        overwrite_cache=False,
     )
     # Training arguments
     training_args = TrainingArguments(
@@ -93,8 +99,8 @@ def main():
         no_cuda=False,
         seed=42,
         fp16=False,
-        fp16_opt_level='O1',
-        local_rank=-1
+        fp16_opt_level="O1",
+        local_rank=-1,
     )
     # Convert dict to objects
     model_args = DictToObj(model_args)
@@ -104,26 +110,34 @@ def main():
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
         datefmt="%m/%d/%Y %H:%M:%S",
-        level=logging.INFO if training_args.local_rank in [-1, 0] else logging.WARN)
+        level=logging.INFO if training_args.local_rank in [-1, 0] else logging.WARN,
+    )
     logger.warning(
         "Process rank: %s, device: %s, n_gpu: %s, distributed training: %s, 16-bits training: %s",
         training_args.local_rank,
         training_args.device,
         training_args.n_gpu,
         bool(training_args.local_rank != -1),
-        training_args.fp16)
+        training_args.fp16,
+    )
     logger.info("Training/evaluation parameters %s", training_args)
 
     # Seed
     set_seed(training_args.seed)
 
     # Load tokenizer and model
-    config = AutoConfig.from_pretrained(model_args.model_name_or_path, cache_dir=model_args.cache_dir)
-    tokenizer = AutoTokenizer.from_pretrained(model_args.model_name_or_path, cache_dir=model_args.cache_dir)
-    model = AutoModelWithLMHead.from_pretrained(model_args.model_name_or_path,
-                                                from_tf=bool(".ckpt" in model_args.model_name_or_path),
-                                                config=config,
-                                                cache_dir=model_args.cache_dir)
+    config = AutoConfig.from_pretrained(
+        model_args.model_name_or_path, cache_dir=model_args.cache_dir
+    )
+    tokenizer = AutoTokenizer.from_pretrained(
+        model_args.model_name_or_path, cache_dir=model_args.cache_dir
+    )
+    model = AutoModelWithLMHead.from_pretrained(
+        model_args.model_name_or_path,
+        from_tf=bool(".ckpt" in model_args.model_name_or_path),
+        config=config,
+        cache_dir=model_args.cache_dir,
+    )
 
     # Add special tokens
     tokenizer.add_special_tokens({"sep_token": sep})
@@ -135,24 +149,33 @@ def main():
     )
 
     eval_dataset = (
-        get_dataset(data_args, tokenizer=tokenizer, evaluate=True) if training_args.do_eval else None
+        get_dataset(data_args, tokenizer=tokenizer, evaluate=True)
+        if training_args.do_eval
+        else None
     )
 
     data_collator = DataCollatorForLanguageModeling(
-        tokenizer=tokenizer, mlm=data_args.mlm, mlm_probability=data_args.mlm_probability
+        tokenizer=tokenizer,
+        mlm=data_args.mlm,
+        mlm_probability=data_args.mlm_probability,
     )
 
     # Initialize trainer
-    trainer = Trainer(model=model, 
-                    args=training_args,
-                    data_collator=data_collator,
-                    train_dataset=train_dataset,
-                    eval_dataset=eval_dataset,
-                    prediction_loss_only=True)
+    trainer = Trainer(
+        model=model,
+        args=training_args,
+        data_collator=data_collator,
+        train_dataset=train_dataset,
+        eval_dataset=eval_dataset,
+        prediction_loss_only=True,
+    )
 
-    model_path = (model_args.model_name_or_path
-                if model_args.model_name_or_path is not None and os.path.isdir(model_args.model_name_or_path)
-                else None)
+    model_path = (
+        model_args.model_name_or_path
+        if model_args.model_name_or_path is not None
+        and os.path.isdir(model_args.model_name_or_path)
+        else None
+    )
 
     # Train the model
     start = timer()
@@ -163,7 +186,7 @@ def main():
         tokenizer.save_pretrained(training_args.output_dir)
 
     # Calculate training time
-    print(f"Training took {end - start) / 3600} hours.")
+    print(f"Training took {(end - start) / 3600} hours.")
 
     # Evaluate model
     results = {}
@@ -186,6 +209,7 @@ def main():
     wandb.log({"eval_loss": eval_output["eval_loss"]})
     wandb.log(result)
     wandb.log({"train_time": (end - start) / 3600})
+
 
 if __name__ == "__main__":
     main()
