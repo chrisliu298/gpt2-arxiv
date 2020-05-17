@@ -19,9 +19,13 @@ def adjust_length_to_model(length, max_sequence_length):
 
 
 def generate(args, tokenizer, model, prompt):
-    args.length = adjust_length_to_model(args.length, max_sequence_length=model.config.max_position_embeddings)
+    args.length = adjust_length_to_model(
+        args.length, max_sequence_length=model.config.max_position_embeddings
+    )
     prompt_text = prompt
-    encoded_prompt = tokenizer.encode(prompt_text, add_special_tokens=False, return_tensors="pt")
+    encoded_prompt = tokenizer.encode(
+        prompt_text, add_special_tokens=False, return_tensors="pt"
+    )
     encoded_prompt = encoded_prompt.to(args.device)
 
     if encoded_prompt.size()[-1] == 0:
@@ -54,66 +58,75 @@ def generate(args, tokenizer, model, prompt):
         text = text[: text.find(args.stop_token) if args.stop_token else None]
         # Add the prompt at the beginning of the sequence. Remove the excess text that was used for pre-processing
         total_sequence = (
-            prompt_text + text[len(tokenizer.decode(encoded_prompt[0], clean_up_tokenization_spaces=True)) :]
+            prompt_text
+            + text[
+                len(
+                    tokenizer.decode(
+                        encoded_prompt[0], clean_up_tokenization_spaces=True
+                    )
+                ) :
+            ]
         )
         generated_sequences.append(total_sequence)
         # print(total_sequence)
     return total_sequence
 
 
-def main():
-    # Logging
-    logging.basicConfig(format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s", 
-                        datefmt="%m/%d/%Y %H:%M:%S", 
-                        level=logging.INFO)
-    logger = logging.getLogger(__name__)
+# Logging
+logging.basicConfig(
+    format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
+    datefmt="%m/%d/%Y %H:%M:%S",
+    level=logging.INFO,
+)
+logger = logging.getLogger(__name__)
 
-    # Set max generation length
-    MAX_LENGTH = int(10000)  # Hardcoded max length to avoid infinite loop
+# Set max generation length
+MAX_LENGTH = int(10000)  # Hardcoded max length to avoid infinite loop
 
-    # Define model class
-    MODEL_CLASSES = {"gpt2": (GPT2LMHeadModel, GPT2Tokenizer)}
+# Define model class
+MODEL_CLASSES = {"gpt2": (GPT2LMHeadModel, GPT2Tokenizer)}
 
-    # Generation arguments
-    args = collections.defaultdict(
-        model_type="gpt2",
-        model_name_or_path="gpt2",
-        prompt="",
-        length=512,
-        stop_token="<|endoftext|>",
-        temperature=1.0,
-        repetition_penalty=1.0,
-        k=0,
-        p=0.90, # use nucleus sampling
-        seed=42,
-        no_cuda=False,
-        num_return_sequences=1,
-        device=torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu"),
-        n_gpu= torch.cuda.device_count()
-    )
+# Generation arguments
+args = collections.defaultdict(
+    model_type="gpt2",
+    model_name_or_path="gpt2",
+    prompt="",
+    length=512,
+    stop_token="<|endoftext|>",
+    temperature=1.0,
+    repetition_penalty=1.0,
+    k=0,
+    p=0.90,  # use nucleus sampling
+    seed=42,
+    no_cuda=False,
+    num_return_sequences=1,
+    device=torch.device(
+        "cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu"
+    ),
+    n_gpu=torch.cuda.device_count(),
+)
 
-    # Convert dict to object
-    args = DictToObj(args)
+# Convert dict to object
+args = DictToObj(args)
 
-    # Set seed
-    set_seed(args.seed)
+# Set seed
+set_seed(args.seed)
 
-    # Load tokenizer and model
-    args.model_type = args.model_type.lower()
-    config_class = AutoConfig.from_pretrained(args.model_name_or_path,
-                                            cache_dir=None)
-    model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
-    tokenizer = tokenizer_class.from_pretrained(args.model_name_or_path,
-                                                from_tf=bool(".ckpt" in args.model_name_or_path),
-                                                config=config_class,
-                                                cache_dir=None)
-    model = model_class.from_pretrained(args.model_name_or_path)
-    model.to(args.device)
-
-    # Generate
-    text = generate(args, tokenizer, model, "Some prompt")
-    print(text)
+# Load tokenizer and model
+args.model_type = args.model_type.lower()
+config_class = AutoConfig.from_pretrained(args.model_name_or_path, cache_dir=None)
+model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
+tokenizer = tokenizer_class.from_pretrained(
+    args.model_name_or_path,
+    from_tf=bool(".ckpt" in args.model_name_or_path),
+    config=config_class,
+    cache_dir=None,
+)
+model = model_class.from_pretrained(args.model_name_or_path)
+model.to(args.device)
 
 
 if __name__ == "__main__":
-    main()
+    # Generate
+    text = generate(args, tokenizer, model, "Some prompt")
+    print(text)
