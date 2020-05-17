@@ -25,6 +25,6 @@ We will add argparse support in later versions.
 > python generate.py
 ```
 
-## Authors
+## Author(s)
 
 - Chris Liu
