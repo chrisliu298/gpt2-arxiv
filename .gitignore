@@ -2,4 +2,5 @@
 .vscode
 *.tsv
 train.txt
-eval.txt
+valid.txt
+test.txt

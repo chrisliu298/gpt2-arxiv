@@ -3,7 +3,9 @@ import pandas as pd
 import random
 
 random.seed(42)
+from datetime import datetime
 
+# Labels
 ai_label = "<|AI|>"
 lg_label = "<|ML|>"
 cl_label = "<|CL|>"
@@ -12,65 +14,74 @@ endoftext = "<|endoftext|>"
 sep = "<|sep|>"
 
 
-def make_dataset(subject, titles, abstract):
-    data = list(zip(titles, abstract))
-    random.shuffle(data)
-    text = [
-        f"{subject} {title} {sep} {abstract} {endoftext}\n\n"
-        for title, abstract in data
-    ]
-    return text
+def read_datasets(subject, filename):
+    """Read a .tsv dataset and extracts titles, abstracts, and created dates
+
+    Args:
+        subject: A label from ("<|AI|>", "<|ML|>", "<|CL|>", "<|CV|>").
+        filename: The name of the dataset file.
+
+    Returns:
+        A list of zipped titles, abstracts, and created dates
+    """
+    dataset = pd.read_csv(filename, delimiter="\t")
+    titles = [f"{subject} {title} {sep}" for title in list(dataset["title"])]
+    abstracts = list(dataset["abstract"])
+    date = [datetime.strptime(i, "%Y-%m-%d") for i in list(dataset["created"])]
+    return list(zip(titles, abstracts, date))
 
 
-def main():
-    ai_dataset = pd.read_csv("cs.AI.tsv", delimiter="\t")
-    lg_dataset = pd.read_csv("cs.LG.tsv", delimiter="\t")
-    cl_dataset = pd.read_csv("cs.CL.tsv", delimiter="\t")
-    cv_dataset = pd.read_csv("cs.CV.tsv", delimiter="\t")
+def merge_datasets():
+    """Merge all four datasets.
 
-    ai_titles = list(ai_dataset["title"])
-    ai_abstract = list(ai_dataset["abstract"])
-    lg_titles = list(lg_dataset["title"])
-    lg_abstract = list(lg_dataset["abstract"])
-    cl_titles = list(cl_dataset["title"])
-    cl_abstract = list(cl_dataset["abstract"])
-    cv_titles = list(cv_dataset["title"])
-    cv_abstract = list(cv_dataset["abstract"])
+    Returns:
+        A list of titles, abstracts, dates, sorted by dates.
+    """
+    ai = read_datasets(ai_label, "cs.AI.tsv")
+    lg = read_datasets(lg_label, "cs.LG.tsv")
+    cl = read_datasets(cl_label, "cs.CL.tsv")
+    cv = read_datasets(cv_label, "cs.CV.tsv")
+    data = ai + lg + cl + cv
+    return sorted(data, key=lambda x: x[-1])
 
-    ai_text = make_dataset(ai_label, ai_titles, ai_abstract)
-    lg_text = make_dataset(lg_label, lg_titles, lg_abstract)
-    cl_text = make_dataset(cl_label, cl_titles, cl_abstract)
-    cv_text = make_dataset(cv_label, cv_titles, cv_abstract)
 
-    print(f"AI paper count: {len(ai_dataset)}")
-    print(f"ML paper count: {len(lg_dataset)}")
-    print(f"CL paper count: {len(cl_dataset)}")
-    print(f"CV paper count: {len(cv_dataset)}")
-    print(
-        f"All paper count: {len(ai_dataset) + len(lg_dataset) + len(cl_dataset) + len(cv_dataset)}"
-    )
+def split_datasets(data):
+    """Split the dataset into train, valid, test sets.
 
-    arxiv_dataset = ai_text + lg_text + cl_text + cv_text
-    random.shuffle(arxiv_dataset)
+    Args:
+        data: A list of titles, abstracts, dates, sorted by dates.
 
-    ratio = 0.9
+    Returns:
+        Train, valid, test sets.
+    """
+    train_text = data[:-12000]
+    eval_text = data[-12000:]
+    valid_test_ratio = 0.5
+    valid_text = eval_text[: int(len(eval_text) * valid_test_ratio)]
+    test_text = eval_text[int(len(eval_text) * valid_test_ratio) :]
+    assert len(train_text) == 109616
+    assert len(valid_text) == 6000
+    assert len(test_text) == 6000
+    return (train_text, valid_text, test_text)
 
-    arxiv_train = arxiv_dataset[: int(len(arxiv_dataset) * ratio)]
-    arxiv_eval = arxiv_dataset[int(len(arxiv_dataset) * ratio) :]
 
-    print(f"Train count: {len(arxiv_train)}")
-    print(f"Eval count: {len(arxiv_eval)}")
+def write_datasets(data, name):
+    """Write a .txt file of the dataset
 
-    with open("train.txt", "w+") as train:
-        for i in arxiv_train:
-            train.write(i)
-    train.close()
-
-    with open("eval.txt", "w+") as eval:
-        for i in arxiv_eval:
-            eval.write(i)
-    eval.close()
+    Args:
+        data: A list of titles, abstracts, dates, sorted by dates.
+        name: The name of the file to write.
+    """
+    with open(name + ".txt", "w+") as f:
+        for d in data:
+            f.write(f"{d[0]} {d[1]}{endoftext}\n\n")
+    f.close()
+    print(f"{name} file completed.")
 
 
 if __name__ == "__main__":
-    main()
+    data = merge_datasets()
+    train, valid, test = split_datasets(data)
+    write_datasets(train, "train")
+    write_datasets(valid, "valid")
+    write_datasets(test, "test")
