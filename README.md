@@ -1,4 +1,4 @@
-# CSE142 Project6: GPT-2-arXiv
+# CSE142 Project6: Fine-Tuning GPT-2 to Generate Research Paper Abstracts
 
 This GPT-2 model is capable of generating abstracts given paper titles.
 
