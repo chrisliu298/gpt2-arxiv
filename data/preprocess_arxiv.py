@@ -1,34 +1,31 @@
 import numpy as np
 import pandas as pd
 import random
-
 random.seed(42)
 from datetime import datetime
+import re
 
 # Labels
-ai_label = "<|AI|>"
-lg_label = "<|ML|>"
-cl_label = "<|CL|>"
-cv_label = "<|CV|>"
+startoftext = "<|startoftext|>"
 endoftext = "<|endoftext|>"
 sep = "<|sep|>"
 
 
-def read_datasets(subject, filename):
+def read_datasets(filename):
     """Read a .tsv dataset and extracts titles, abstracts, and created dates
 
     Args:
-        subject: A label from ("<|AI|>", "<|ML|>", "<|CL|>", "<|CV|>").
         filename: The name of the dataset file.
 
     Returns:
         A list of zipped titles, abstracts, and created dates
     """
     dataset = pd.read_csv(filename, delimiter="\t")
-    titles = [f"{subject} {title} {sep}" for title in list(dataset["title"])]
-    abstracts = list(dataset["abstract"])
+    titles = [f"{startoftext} {title} {sep}" for title in list(dataset["title"])]
+    abstracts = [abst + endoftext for abst in list(dataset["abstract"])]
     date = [datetime.strptime(i, "%Y-%m-%d") for i in list(dataset["created"])]
-    return list(zip(titles, abstracts, date))
+    arxiv_id = [re.sub("[^0-9]", "", i) for i in list(dataset["arxiv_id"])]
+    return list(zip(titles, abstracts, arxiv_id, date))
 
 
 def merge_datasets():
@@ -37,12 +34,19 @@ def merge_datasets():
     Returns:
         A list of titles, abstracts, dates, sorted by dates.
     """
-    ai = read_datasets(ai_label, "cs.AI.tsv")
-    lg = read_datasets(lg_label, "cs.LG.tsv")
-    cl = read_datasets(cl_label, "cs.CL.tsv")
-    cv = read_datasets(cv_label, "cs.CV.tsv")
+    ai = read_datasets("cs.AI.tsv")
+    lg = read_datasets("cs.LG.tsv")
+    cl = read_datasets("cs.CL.tsv")
+    cv = read_datasets("cs.CV.tsv")
     data = ai + lg + cl + cv
-    return sorted(data, key=lambda x: x[-1])
+    unique_ids = set()
+    filtered_data = []
+    for d in data:
+        if d[-2] not in unique_ids:
+            unique_ids.add(d[-2])
+            filtered_data.append(d)
+    sorted_data = sorted(filtered_data, key=lambda x: x[-1])
+    return sorted_data
 
 
 def split_datasets(data):
@@ -54,14 +58,14 @@ def split_datasets(data):
     Returns:
         Train, valid, test sets.
     """
-    train_text = data[:-12000]
-    eval_text = data[-12000:]
+    train_text = data[:-9880]
+    eval_text = data[-9880:]
     valid_test_ratio = 0.5
-    valid_text = eval_text[: int(len(eval_text) * valid_test_ratio)]
-    test_text = eval_text[int(len(eval_text) * valid_test_ratio) :]
-    assert len(train_text) == 109616
-    assert len(valid_text) == 6000
-    assert len(test_text) == 6000
+    valid_text = eval_text[:int(len(eval_text) * valid_test_ratio)]
+    test_text = eval_text[int(len(eval_text) * valid_test_ratio):]
+    assert len(train_text) == 90000
+    assert len(valid_text) == 4940
+    assert len(test_text) == 4940
     return (train_text, valid_text, test_text)
 
 
@@ -74,7 +78,7 @@ def write_datasets(data, name):
     """
     with open(name + ".txt", "w+") as f:
         for d in data:
-            f.write(f"{d[0]} {d[1]}{endoftext}\n\n")
+            f.write(f"{d[0]} {d[1]}\n\n")
     f.close()
     print(f"{name} file completed.")
 
