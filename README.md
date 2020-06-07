@@ -10,14 +10,6 @@ This repo contains a part of the dataset from [arxiv_archive](https://github.com
 
 I use the titles and abstract of these papers to fine-tune my GPT-2 model.
 
-| Category  |   Count    | Percentage (%) | BPE Token Count |
-| :-------: | :--------: | :------------: | :-------------: |
-|    AI     |   21889    |     18.00      |    4,791,146    |
-|    LG     |   47025    |     38.67      |   11,078,662    |
-|    CL     |   17008    |     13.99      |    3,549,625    |
-|    CV     |   35694    |     29.35      |    8,687,225    |
-| **Total** | **121616** |    **100**     | **28,106,658**  |
-
 |   Splits   |   Count    | Percentage (%) | BPE Token Count |
 | :--------: | :--------: | :------------: | :-------------: |
 |   Train    |   109616   |     90.13      |   25,201,566    |

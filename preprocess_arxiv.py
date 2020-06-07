@@ -1,14 +1,16 @@
 import numpy as np
 import pandas as pd
 import random
-random.seed(42)
 from datetime import datetime
 import re
+
+random.seed(42)
 
 # Labels
 startoftext = "<|startoftext|>"
 endoftext = "<|endoftext|>"
 sep = "<|sep|>"
+path = "data/"
 
 
 def read_datasets(filename):
@@ -34,10 +36,10 @@ def merge_datasets():
     Returns:
         A list of titles, abstracts, dates, sorted by dates.
     """
-    ai = read_datasets("cs.AI.tsv")
-    lg = read_datasets("cs.LG.tsv")
-    cl = read_datasets("cs.CL.tsv")
-    cv = read_datasets("cs.CV.tsv")
+    ai = read_datasets(path + "cs.AI.tsv")
+    lg = read_datasets(path + "cs.LG.tsv")
+    cl = read_datasets(path + "cs.CL.tsv")
+    cv = read_datasets(path + "cs.CV.tsv")
     data = ai + lg + cl + cv
     unique_ids = set()
     filtered_data = []
@@ -61,8 +63,8 @@ def split_datasets(data):
     train_text = data[:-9880]
     eval_text = data[-9880:]
     valid_test_ratio = 0.5
-    valid_text = eval_text[:int(len(eval_text) * valid_test_ratio)]
-    test_text = eval_text[int(len(eval_text) * valid_test_ratio):]
+    valid_text = eval_text[: int(len(eval_text) * valid_test_ratio)]
+    test_text = eval_text[int(len(eval_text) * valid_test_ratio) :]
     assert len(train_text) == 90000
     assert len(valid_text) == 4940
     assert len(test_text) == 4940
@@ -76,7 +78,7 @@ def write_datasets(data, name):
         data: A list of titles, abstracts, dates, sorted by dates.
         name: The name of the file to write.
     """
-    with open(name + ".txt", "w+") as f:
+    with open(path + name + ".txt", "w+") as f:
         for d in data:
             f.write(f"{d[0]} {d[1]}\n\n")
     f.close()
