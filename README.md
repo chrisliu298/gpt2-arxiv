@@ -12,19 +12,19 @@ I use the titles and abstract of these papers to fine-tune my GPT-2 model.
 
 |   Splits   |   Count    | Percentage (%) | BPE Token Count |
 | :--------: | :--------: | :------------: | :-------------: |
-|   Train    |   109616   |     90.13      |   25,201,566    |
-| Validation |    6000    |      4.93      |    1,435,898    |
-|    Test    |    6000    |      4.93      |    1,469,196    |
-| **Total**  | **121616** |    **100**     | **28,106,660*** |
+|   Train    |   90,000   |     90.11      |   20,834,012    |
+| Validation |    4,940   |      4.95      |    1,195,056    |
+|    Test    |    4,940   |      4.95      |    1,218,754    |
+| **Total**  | **99,880** |    **100**     | **23,247,822*** |
 
 **Note:** The two extra tokens here are the `\n`'s at the bottom of the file.
 
 ### Usage
 
-The script reads the `.tsv` file, adds special symbols to separate the titile and the abstract, and writes a text file for each category and an extra file of shuffled instances. It splits all examples into training, validation, and test sets.
+The script reads the `.tsv` file, adds special symbols to separate the titile and the abstract, sorts them by dates, and writes a text file for each category and an extra file of shuffled instances. It splits all examples into training, validation, and test sets.
 
 ```shell
-python preprocess_arxiv.py
+> python preprocess_arxiv.py
 ```
 
 
@@ -32,19 +32,19 @@ python preprocess_arxiv.py
 
 ### Prerequisites
 
-```
+```shell
 > pip install -r requirements.txt
 ```
 
 ## Fine-Tune
 
-```
+```shell
 > python train.py
 ```
 
 ## Generate
 
-```
+```shell
 > python generate.py
 ```
 
