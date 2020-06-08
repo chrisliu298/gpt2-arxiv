@@ -28,11 +28,7 @@ def generate(args, tokenizer, model, prompt):
     )
     encoded_prompt = encoded_prompt.to(args.device)
 
-    if encoded_prompt.size()[-1] == 0:
-        input_ids = None
-    else:
-        input_ids = encoded_prompt
-
+    input_ids = None if encoded_prompt.size()[-1] == 0 else encoded_prompt
     output_sequences = model.generate(
         input_ids=input_ids,
         max_length=args.length + len(encoded_prompt[0]),

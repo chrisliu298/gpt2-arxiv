@@ -47,8 +47,7 @@ def merge_datasets():
         if d[-2] not in unique_ids:
             unique_ids.add(d[-2])
             filtered_data.append(d)
-    sorted_data = sorted(filtered_data, key=lambda x: x[-1])
-    return sorted_data
+    return sorted(filtered_data, key=lambda x: x[-1])
 
 
 def split_datasets(data):
