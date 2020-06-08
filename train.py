@@ -68,7 +68,7 @@ data_args = collections.defaultdict(
 )
 # Training arguments
 training_args = TrainingArguments(
-    output_dir="/storage/gpt2-large",
+    output_dir="/model",
     overwrite_output_dir=True,
     do_train=True,
     do_eval=True,
