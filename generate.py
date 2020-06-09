@@ -22,7 +22,7 @@ def generate(args, tokenizer, model, prompt):
     args.length = adjust_length_to_model(
         args.length, max_sequence_length=model.config.max_position_embeddings
     )
-    prompt_text = prompt
+    prompt_text = "<|startoftext|> " + prompt + " <|sep|>"
     encoded_prompt = tokenizer.encode(
         prompt_text, add_special_tokens=False, return_tensors="pt"
     )
