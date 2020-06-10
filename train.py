@@ -36,8 +36,12 @@ def get_dataset(args, tokenizer, evaluate=False):
         )
     else:
         return TextDataset(
-            tokenizer=tokenizer, file_path=file_path, block_size=args.block_size, overwrite_cache=args.overwrite_cache
+            tokenizer=tokenizer,
+            file_path=file_path,
+            block_size=args.block_size,
+            overwrite_cache=args.overwrite_cache,
         )
+
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -180,7 +184,6 @@ if trainer.is_world_master():
 
 # Calculate training time
 logger.info(f"Training took {(end - start) / 3600} hours.")
-
 
 
 # Evaluation on validation set

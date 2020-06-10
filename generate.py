@@ -7,14 +7,15 @@ import pandas as pd
 import tqdm
 from transformers import GPT2LMHeadModel, GPT2Tokenizer, AutoConfig, set_seed
 
+start = "<|startoftext|> "
+sep = " <|sep|>"
+
 
 def adjust_length_to_model(length, max_sequence_length):
-    if length < 0 and max_sequence_length > 0:
+    if length < 0 and max_sequence_length > 0 or 0 < max_sequence_length < length:
         length = max_sequence_length
-    elif 0 < max_sequence_length < length:
-        length = max_sequence_length  # No generation bigger than model size
     elif length < 0:
-        length = MAX_LENGTH  # avoid infinite loop
+        length = MAX_LENGTH
     return length
 
 
@@ -22,7 +23,7 @@ def generate(args, tokenizer, model, prompt):
     args.length = adjust_length_to_model(
         args.length, max_sequence_length=model.config.max_position_embeddings
     )
-    prompt_text = "<|startoftext|> " + prompt + " <|sep|>"
+    prompt_text = start + prompt + sep
     encoded_prompt = tokenizer.encode(
         prompt_text, add_special_tokens=False, return_tensors="pt"
     )
@@ -122,7 +123,6 @@ model = model_class.from_pretrained(args.model_name_or_path)
 model.to(args.device)
 
 
-if __name__ == "__main__":
-    # Generate
-    text = generate(args, tokenizer, model, "Some prompt")
-    print(text)
+# Generate
+text = generate(args, tokenizer, model, "Language Models are Few-Shot Learners")
+print(text)
