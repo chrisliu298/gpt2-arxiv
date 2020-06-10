@@ -2,8 +2,6 @@
 
 This GPT-2 model is capable of generating abstracts given paper titles.
 
-We will add argparse support in later versions.
-
 ## ArXiv Dataset
 
 This repo contains a part of the dataset from [arxiv_archive](https://github.com/staeiou/arxiv_archive). Specifically, it contains papers under aritficial intelligence (AI), machine learning (LG), computation and language (CL), and computer vision and pattern recognition (CV) categories. 
