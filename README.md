@@ -13,9 +13,7 @@ I use the titles and abstract of these papers to fine-tune my GPT-2 model.
 |   Train    |   90,000   |     90.11      |   20,834,012    |
 | Validation |    4,940   |      4.95      |    1,195,056    |
 |    Test    |    4,940   |      4.95      |    1,218,754    |
-| **Total**  | **99,880** |    **100**     | **23,247,822*** |
-
-**Note:** The two extra tokens here are the `\n`'s at the bottom of the file.
+| **Total**  | **99,880** |    **100**     | **23,247,822**  |
 
 ### Usage
 
