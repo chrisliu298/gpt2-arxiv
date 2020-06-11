@@ -86,7 +86,7 @@ MODEL_CLASSES = {"gpt2": (GPT2LMHeadModel, GPT2Tokenizer)}
 # Generation arguments
 args = collections.defaultdict(
     model_type="gpt2",
-    model_name_or_path="/content/drive/My Drive/models/GPT-2/arxiv/arxiv-gpt2-checkpoint-140000",
+    model_name_or_path="/model",
     prompt="",
     length=512,
     stop_token="<|endoftext|>",
