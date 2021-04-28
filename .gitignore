@@ -1,0 +1,6 @@
+.DS_Store
+.vscode
+*.tsv
+train.txt
+valid.txt
+test.txt
